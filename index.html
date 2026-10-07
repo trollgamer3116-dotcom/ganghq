@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gang HQ</title>
+<meta name="description" content="Gang HQ — headquarters of Aarav's extremely unserious crew.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<canvas id="stars" aria-hidden="true"></canvas>
+<header class="nav glass">
+  <a href="#top" class="logo">✦ Gang HQ</a>
+  <nav aria-label="Main"><a href="#roster">Roster</a><a href="#lore">Lore Log</a><a href="#status">Status</a></nav>
+</header>
+<main id="main">
+<section id="top" class="hero">
+  <p class="eyebrow">Est. whenever Aarav got bored · Multiversal Division</p>
+  <h1>Gang <span>HQ</span></h1>
+  <p class="lead">The galaxy's most overpowered group chat. Gods, geniuses, and one Saiyan prince who is <em>still</em> mad about a captcha.</p>
+  <p class="boss">Run by <strong>Aarav</strong> — <q>I don't make mistakes, I make lore.</q></p>
+  <div class="cta"><a class="btn gold" href="#roster">Meet the crew</a><a class="btn ghost" href="#lore">Read the incidents</a></div>
+</section>
+
+<section id="roster" class="section">
+  <h2>The Roster</h2>
+  <p class="sub">Click a card. Nobody here signed a waiver.</p>
+  <div id="grid" class="grid" role="list"></div>
+</section>
+
+<section id="lore" class="section">
+  <h2>Lore Log</h2>
+  <p class="sub">Canon. Legally binding. Vegeta has requested several redactions (denied).</p>
+  <ol id="timeline" class="timeline"></ol>
+  <form id="loreForm" class="glass form">
+    <h3>Add lore</h3>
+    <label>Title <input name="title" required maxlength="80" placeholder="e.g. Kusu discovers the mute button"></label>
+    <label>Who was involved <input name="who" maxlength="80" placeholder="Vegeta, unfortunately"></label>
+    <label>What happened <textarea name="text" required maxlength="500" rows="3" placeholder="Spare no details. Vados will anyway."></textarea></label>
+    <div class="row"><button class="btn gold" type="submit">Commit to canon</button><button class="btn ghost" type="button" id="clearLore">Wipe my additions</button></div>
+    <p id="formMsg" role="status" aria-live="polite"></p>
+  </form>
+</section>
+
+<section id="status" class="section">
+  <h2>HQ System Status</h2>
+  <p class="sub">All systems nominal*. <small>*Nominal is doing a lot of work here.</small></p>
+  <div id="metrics" class="metrics"></div>
+</section>
+</main>
+<footer><p>Gang HQ · Built with vanilla JS and spite · No Saiyans were dignified in the making of this site.</p></footer>
+
+<dialog id="panel" class="glass panel" aria-labelledby="pName">
+  <button class="close" id="closePanel" aria-label="Close">×</button>
+  <div id="panelBody"></div>
+</dialog>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body></html>
