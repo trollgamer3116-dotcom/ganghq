@@ -2,14 +2,21 @@
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-/* starfield + nebula */
-const cv=$('#stars'),cx=cv.getContext('2d');let W,H,st=[];
-function size(){W=cv.width=innerWidth*devicePixelRatio;H=cv.height=innerHeight*devicePixelRatio;st=Array.from({length:Math.min(400,W*H/6000|0)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*.9+.1,t:Math.random()*6}))}
-function draw(t){cx.clearRect(0,0,W,H);
- const g=cx.createRadialGradient(W*.7+Math.sin(t/9000)*W*.05,H*.35,0,W*.7,H*.35,W*.5);g.addColorStop(0,'rgba(124,77,255,.18)');g.addColorStop(.5,'rgba(79,227,224,.05)');g.addColorStop(1,'transparent');cx.fillStyle=g;cx.fillRect(0,0,W,H);
- for(const s of st){const a=.5+.5*Math.sin(t/700+s.t);cx.fillStyle=`rgba(${s.z>.8?'245,199,106':'233,232,255'},${a*s.z})`;cx.fillRect(s.x,s.y,s.z*2.2,s.z*2.2);if(!RM){s.y+=s.z*.3;if(s.y>H)s.y=0}}
- if(!RM)requestAnimationFrame(draw)}
-addEventListener('resize',()=>{size();if(RM)draw(0)});size();RM?draw(0):requestAnimationFrame(draw);
+/* starfield: DPR-capped, nebula pre-rendered offscreen, 30fps, paused when hidden/off-screen */
+const cv=$('#stars'),cx=cv.getContext('2d',{alpha:true});let W,H,DPR,st=[],neb=document.createElement('canvas'),run=true,last=0,raf=0;
+function size(){DPR=Math.min(1.25,devicePixelRatio||1);W=cv.width=innerWidth*DPR|0;H=cv.height=innerHeight*DPR|0;
+ st=Array.from({length:Math.min(140,W*H/9000|0)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*.9+.1,t:Math.random()*6,s:0}));
+ st.forEach(s=>s.s=Math.max(1,s.z*2*DPR));
+ neb.width=W;neb.height=H;const n=neb.getContext('2d'),g=n.createRadialGradient(W*.7,H*.35,0,W*.7,H*.35,W*.5);g.addColorStop(0,'rgba(124,77,255,.18)');g.addColorStop(.5,'rgba(79,227,224,.05)');g.addColorStop(1,'rgba(0,0,0,0)');n.fillStyle=g;n.fillRect(0,0,W,H)}
+function draw(t){cx.clearRect(0,0,W,H);cx.drawImage(neb,0,0);
+ for(const s of st){cx.globalAlpha=(.5+.5*Math.sin(t/700+s.t))*s.z;cx.fillStyle=s.z>.8?'#f5c76a':'#e9e8ff';cx.fillRect(s.x,s.y,s.s,s.s);if(!RM){s.y+=s.z*.6;if(s.y>H)s.y=0}}
+ cx.globalAlpha=1}
+function loop(t){raf=0;if(!run)return;if(t-last>=33){last=t;draw(t)}raf=requestAnimationFrame(loop)}
+function setRun(v){run=v&&!RM&&!document.hidden;if(run&&!raf)raf=requestAnimationFrame(loop)}
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{size();draw(performance.now())},150)},{passive:true});
+size();draw(0);setRun(true);
+document.addEventListener('visibilitychange',()=>setRun(heroVis));
+let heroVis=true;if('IntersectionObserver' in window)new IntersectionObserver(([e])=>{heroVis=e.isIntersecting;setRun(heroVis)}).observe($('.hero'));
 /* procedural avatars */
 function avatar(c){const shapes={
  crown:`<path d="M60 80 L80 40 L100 70 L120 30 L140 70 L160 40 L180 80 Z" fill="${c.color}"/>`,
@@ -59,7 +66,9 @@ const M=[
  {k:'cap',n:'Captcha win rate (Vegeta)',f:()=>'0.0%',note:'Do not bring this up',bad:1}];
 $('#metrics').innerHTML=M.map(m=>`<div class="metric glass reveal"><div class="n"><span class="dot ${m.bad?'bad':''}"></span>${m.n}</div><div class="v" id="m-${m.k}">${m.f()}</div><div class="note">${m.note}</div></div>`).join('');
 function updVeg(){$('#m-veg').textContent=M[1].f()}
-if(!RM)setInterval(()=>M.forEach(m=>{if(m.k!=='veg')$('#m-'+m.k).textContent=m.f()}),2500);
+const mEls=M.map(m=>[m,document.getElementById('m-'+m.k)]);let mVis=false;
+if('IntersectionObserver' in window)new IntersectionObserver(([e])=>mVis=e.isIntersecting).observe($('#metrics'));
+if(!RM)setInterval(()=>{if(!mVis||document.hidden)return;for(const[m,el]of mEls)if(m.k!=='veg'&&m.k!=='zeno'&&m.k!=='cap'&&m.k!=='part'){const v=String(m.f());if(el.textContent!==v)el.textContent=v}},4000);
 /* reveal */
 const io='IntersectionObserver' in window&&!RM?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1}):null;
 document.querySelectorAll('.reveal').forEach(el=>io?io.observe(el):el.classList.add('in'));
