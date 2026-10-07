@@ -2,21 +2,13 @@
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-/* starfield: DPR-capped, nebula pre-rendered offscreen, 30fps, paused when hidden/off-screen */
-const cv=$('#stars'),cx=cv.getContext('2d',{alpha:true});let W,H,DPR,st=[],neb=document.createElement('canvas'),run=true,last=0,raf=0;
-function size(){DPR=Math.min(1.25,devicePixelRatio||1);W=cv.width=innerWidth*DPR|0;H=cv.height=innerHeight*DPR|0;
- st=Array.from({length:Math.min(140,W*H/9000|0)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*.9+.1,t:Math.random()*6,s:0}));
- st.forEach(s=>s.s=Math.max(1,s.z*2*DPR));
- neb.width=W;neb.height=H;const n=neb.getContext('2d'),g=n.createRadialGradient(W*.7,H*.35,0,W*.7,H*.35,W*.5);g.addColorStop(0,'rgba(124,77,255,.18)');g.addColorStop(.5,'rgba(79,227,224,.05)');g.addColorStop(1,'rgba(0,0,0,0)');n.fillStyle=g;n.fillRect(0,0,W,H)}
-function draw(t){cx.clearRect(0,0,W,H);cx.drawImage(neb,0,0);
- for(const s of st){cx.globalAlpha=(.5+.5*Math.sin(t/700+s.t))*s.z;cx.fillStyle=s.z>.8?'#f5c76a':'#e9e8ff';cx.fillRect(s.x,s.y,s.s,s.s);if(!RM){s.y+=s.z*.6;if(s.y>H)s.y=0}}
- cx.globalAlpha=1}
-function loop(t){raf=0;if(!run)return;if(t-last>=33){last=t;draw(t)}raf=requestAnimationFrame(loop)}
-function setRun(v){run=v&&!RM&&!document.hidden;if(run&&!raf)raf=requestAnimationFrame(loop)}
-let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{size();draw(performance.now())},150)},{passive:true});
-size();draw(0);setRun(true);
-document.addEventListener('visibilitychange',()=>setRun(heroVis));
-let heroVis=true;if('IntersectionObserver' in window)new IntersectionObserver(([e])=>{heroVis=e.isIntersecting;setRun(heroVis)}).observe($('.hero'));
+/* starfield: stars pre-rendered ONCE into images; CSS layers twinkle/drift on the compositor (transform/opacity only). Zero per-frame JS. */
+(function(){const host=$('#stars');const T=512;
+ function tile(n,gold,seed){const c=document.createElement('canvas');c.width=c.height=T;const x=c.getContext('2d');let r=seed;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+  for(let i=0;i<n;i++){const z=rnd()*.9+.1,sz=z*1.8+.4;x.globalAlpha=.35+z*.65;x.fillStyle=rnd()<gold?'#f5c76a':'#e9e8ff';x.beginPath();x.arc(rnd()*T,rnd()*T,sz/2,0,6.283);x.fill()}
+  return c.toDataURL('image/png')}
+ [[70,.05,7],[40,.2,99],[22,.4,1234]].forEach(([n,g,sd],i)=>{const d=document.createElement('div');d.className='sl sl'+i;d.style.backgroundImage=`url(${tile(n,g,sd)})`;host.appendChild(d)});
+})();
 /* procedural avatars */
 function avatar(c){const shapes={
  crown:`<path d="M60 80 L80 40 L100 70 L120 30 L140 70 L160 40 L180 80 Z" fill="${c.color}"/>`,
